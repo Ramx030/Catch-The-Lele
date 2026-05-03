@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Tangkap Lele! 🐟</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --water: #0a3d6b;
+    --water-light: #1565a8;
+    --surface: #0d2b45;
+    --sand: #c9a84c;
+    --green: #2ecc71;
+    --red: #e74c3c;
+    --yellow: #f1c40f;
+    --white: #f0f8ff;
+  }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(180deg, #1a5276 0%, #0a3d6b 40%, #0d2b45 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* BUBBLES */
+  .bubble {
+    position: fixed;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    animation: rise linear infinite;
+    pointer-events: none;
+  }
+  @keyframes rise {
+    0% { transform: translateY(100vh) scale(0.5); opacity: 0.4; }
+    100% { transform: translateY(-100px) scale(1); opacity: 0; }
+  }
+
+  /* SCREENS */
+  .screen { display: none; width: 100%; max-width: 420px; padding: 20px; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; }
+
+  /* START SCREEN */
+  .game-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 52px;
+    color: var(--white);
+    text-shadow: 0 4px 20px rgba(0,150,255,0.6), 0 0 40px rgba(0,200,255,0.3);
+    text-align: center;
+    line-height: 1.1;
+    margin-bottom: 8px;
+    animation: titlePulse 2s ease-in-out infinite;
+  }
+  @keyframes titlePulse {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+  }
+  .subtitle {
+    color: rgba(200,230,255,0.7);
+    font-size: 15px;
+    margin-bottom: 36px;
+    text-align: center;
+  }
+
+  /* LELE SHOWCASE */
+  .lele-showcase {
+    font-size: 100px;
+    margin: 16px 0 32px;
+    animation: swimShowcase 3s ease-in-out infinite;
+    filter: drop-shadow(0 8px 24px rgba(0,150,255,0.5));
+  }
+  @keyframes swimShowcase {
+    0%,100% { transform: rotate(-8deg) translateY(0); }
+    50% { transform: rotate(8deg) translateY(-12px); }
+  }
+
+  /* BUTTONS */
+  .btn-main {
+    background: linear-gradient(135deg, #f1c40f, #e67e22);
+    color: #1a0a00;
+    border: none;
+    border-radius: 50px;
+    padding: 16px 48px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 22px;
+    cursor: pointer;
+    box-shadow: 0 6px 24px rgba(241,196,15,0.4), 0 2px 0 rgba(0,0,0,0.3);
+    transition: all 0.15s;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    width: 100%;
+    max-width: 280px;
+  }
+  .btn-main:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(241,196,15,0.5); }
+  .btn-main:active { transform: translateY(1px); box-shadow: 0 3px 12px rgba(241,196,15,0.3); }
+
+  .btn-sec {
+    background: rgba(255,255,255,0.1);
+    color: var(--white);
+    border: 2px solid rgba(255,255,255,0.25);
+    border-radius: 50px;
+    padding: 12px 36px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    width: 100%;
+    max-width: 280px;
+    margin-bottom: 8px;
+  }
+  .btn-sec:hover { background: rgba(255,255,255,0.18); }
+
+  /* DIFFICULTY */
+  .diff-label { color: rgba(200,230,255,0.7); font-size: 13px; margin-bottom: 12px; text-align:center; }
+  .diff-btns { display: flex; gap: 8px; margin-bottom: 28px; }
+  .diff-btn {
+    flex: 1;
+    padding: 10px 0;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .diff-btn.easy { background: rgba(46,204,113,0.15); color: #2ecc71; border-color: rgba(46,204,113,0.3); }
+  .diff-btn.medium { background: rgba(241,196,15,0.15); color: #f1c40f; border-color: rgba(241,196,15,0.3); }
+  .diff-btn.hard { background: rgba(231,76,60,0.15); color: #e74c3c; border-color: rgba(231,76,60,0.3); }
+  .diff-btn.active { transform: scale(1.05); }
+  .diff-btn.easy.active { background: rgba(46,204,113,0.3); border-color: #2ecc71; }
+  .diff-btn.medium.active { background: rgba(241,196,15,0.3); border-color: #f1c40f; }
+  .diff-btn.hard.active { background: rgba(231,76,60,0.3); border-color: #e74c3c; }
+
+  /* HUD */
+  .hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 420px;
+    padding: 12px 20px;
+    background: rgba(0,0,0,0.35);
+    border-radius: 16px;
+    margin-bottom: 12px;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .hud-item { text-align: center; }
+  .hud-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(200,230,255,0.5); }
+  .hud-val {
+    font-family: 'Fredoka One', cursive;
+    font-size: 26px;
+    color: var(--white);
+    line-height: 1;
+  }
+  .hud-val.timer-warn { color: #e74c3c; animation: blink 0.5s infinite; }
+  @keyframes blink { 50% { opacity: 0.4; } }
+
+  /* GAME CANVAS AREA */
+  #game-area {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    height: 480px;
+    background: linear-gradient(180deg, #1565a8 0%, #0d4f8f 50%, #0a3d6b 100%);
+    border-radius: 20px;
+    overflow: hidden;
+    cursor: none;
+    border: 2px solid rgba(100,180,255,0.2);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 0 60px rgba(0,80,160,0.3);
+  }
+
+  /* WATER SURFACE SHIMMER */
+  #game-area::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 60px;
+    background: linear-gradient(180deg, rgba(100,200,255,0.15), transparent);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* WATER LINES */
+  .water-line {
+    position: absolute;
+    height: 1px;
+    background: rgba(100,200,255,0.12);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: waterFlow linear infinite;
+  }
+  @keyframes waterFlow {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(200%); }
+  }
+
+  /* LELE */
+  .lele {
+    position: absolute;
+    font-size: 40px;
+    cursor: pointer;
+    transition: transform 0.1s;
+    z-index: 5;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+    animation: swimWiggle linear infinite;
+    line-height: 1;
+    transform-origin: center;
+  }
+  .lele:hover { transform: scale(1.15) !important; }
+  @keyframes swimWiggle {
+    0%,100% { filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)) rotate(-5deg); }
+    50% { filter: drop-shadow(0 6px 12px rgba(0,0,0,0.3)) rotate(5deg); }
+  }
+  .lele.caught {
+    animation: caughtPop 0.4s forwards !important;
+    pointer-events: none;
+  }
+  @keyframes caughtPop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.6) rotate(20deg); }
+    100% { transform: scale(0) rotate(60deg); opacity: 0; }
+  }
+  .lele.missed {
+    animation: missedSink 0.5s forwards !important;
+    pointer-events: none;
+  }
+  @keyframes missedSink {
+    100% { transform: translateY(60px) scale(0.5); opacity: 0; }
+  }
+
+  /* NET (cursor) */
+  #net {
+    position: absolute;
+    font-size: 44px;
+    pointer-events: none;
+    z-index: 10;
+    transform: translate(-50%, -50%);
+    transition: transform 0.05s;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+  }
+
+  /* SPLASH */
+  .splash {
+    position: absolute;
+    font-size: 24px;
+    pointer-events: none;
+    z-index: 8;
+    animation: splashAnim 0.6s forwards;
+  }
+  @keyframes splashAnim {
+    0% { transform: translate(-50%,-50%) scale(0.5); opacity: 1; }
+    100% { transform: translate(-50%,-100%) scale(1.5); opacity: 0; }
+  }
+
+  /* SCORE POPUP */
+  .score-popup {
+    position: absolute;
+    font-family: 'Fredoka One', cursive;
+    font-size: 28px;
+    font-weight: 900;
+    pointer-events: none;
+    z-index: 9;
+    animation: popUp 0.8s forwards;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  }
+  .score-popup.good { color: #2ecc71; }
+  .score-popup.miss { color: #e74c3c; }
+  @keyframes popUp {
+    0% { transform: translate(-50%,-50%) scale(0.6); opacity: 1; }
+    70% { transform: translate(-50%,-120%) scale(1.1); opacity: 1; }
+    100% { transform: translate(-50%,-160%) scale(1); opacity: 0; }
+  }
+
+  /* SEAWEED */
+  .seaweed {
+    position: absolute;
+    bottom: 0;
+    font-size: 36px;
+    animation: sway 2s ease-in-out infinite;
+    transform-origin: bottom center;
+    pointer-events: none;
+    opacity: 0.7;
+  }
+  @keyframes sway {
+    0%,100% { transform: rotate(-12deg); }
+    50% { transform: rotate(12deg); }
+  }
+
+  /* GAME OVER SCREEN */
+  .go-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 40px;
+    color: var(--white);
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .go-emoji { font-size: 64px; margin: 16px 0; }
+  .go-score {
+    font-family: 'Fredoka One', cursive;
+    font-size: 64px;
+    color: var(--yellow);
+    text-shadow: 0 4px 20px rgba(241,196,15,0.5);
+    margin-bottom: 4px;
+  }
+  .go-label { color: rgba(200,230,255,0.6); font-size: 14px; margin-bottom: 8px; }
+  .go-best {
+    color: #2ecc71;
+    font-weight: 700;
+    font-size: 15px;
+    margin-bottom: 28px;
+    background: rgba(46,204,113,0.1);
+    border: 1px solid rgba(46,204,113,0.3);
+    padding: 6px 18px;
+    border-radius: 20px;
+  }
+  .go-stats {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 28px;
+    width: 100%;
+    max-width: 300px;
+  }
+  .go-stat {
+    flex: 1;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+  }
+  .go-stat-val { font-family: 'Fredoka One', cursive; font-size: 24px; color: var(--white); }
+  .go-stat-label { font-size: 11px; color: rgba(200,230,255,0.5); margin-top: 2px; }
+
+  /* COMBO */
+  #combo-display {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 18px;
+    color: #f1c40f;
+    z-index: 6;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  /* INSTRUCTIONS */
+  .instructions {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .inst-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: rgba(200,230,255,0.6);
+    background: rgba(255,255,255,0.05);
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  /* HIGH SCORE */
+  .highscore-badge {
+    background: rgba(241,196,15,0.1);
+    border: 1px solid rgba(241,196,15,0.3);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 13px;
+    color: rgba(241,196,15,0.8);
+    margin-bottom: 24px;
+  }
+</style>
+</head>
+<body>
+
+<!-- BACKGROUND BUBBLES -->
+<script>
+  for(let i=0;i<12;i++){
+    const b=document.createElement('div');
+    b.className='bubble';
+    const s=Math.random()*40+10;
+    b.style.cssText=`width:${s}px;height:${s}px;left:${Math.random()*100}vw;bottom:-${s}px;animation-duration:${Math.random()*8+6}s;animation-delay:${Math.random()*8}s;`;
+    document.body.appendChild(b);
+  }
+</script>
+
+<!-- ===== START SCREEN ===== -->
+<div class="screen active" id="screen-start">
+  <div class="game-title">🎣 Tangkap<br>Lele!</div>
+  <div class="subtitle">Klik lele secepat mungkin sebelum kabur!</div>
+  <div class="lele-showcase">🐟</div>
+
+  <div class="diff-label">Pilih Kesulitan</div>
+  <div class="diff-btns">
+    <button class="diff-btn easy" onclick="setDiff('easy',this)">😊 Mudah</button>
+    <button class="diff-btn medium active" onclick="setDiff('medium',this)">😤 Sedang</button>
+    <button class="diff-btn hard" onclick="setDiff('hard',this)">😈 Susah</button>
+  </div>
+
+  <div class="highscore-badge" id="hs-badge">🏆 Rekor: 0 poin</div>
+
+  <button class="btn-main" onclick="startGame()">🎣 MULAI MAIN!</button>
+  <button class="btn-sec" onclick="showHow()">❓ Cara Main</button>
+</div>
+
+<!-- ===== HOW TO SCREEN ===== -->
+<div class="screen" id="screen-how">
+  <div class="game-title" style="font-size:32px;margin-bottom:24px;">Cara Main</div>
+  <div style="background:rgba(255,255,255,0.06);border-radius:20px;padding:24px;width:100%;margin-bottom:24px;">
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <span style="font-size:32px;">🐟</span>
+        <div>
+          <div style="font-weight:700;color:var(--white);">Tangkap lele!</div>
+          <div style="font-size:13px;color:rgba(200,230,255,0.6);">Klik/tap lele yang muncul di kolam</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <span style="font-size:32px;">⏱️</span>
+        <div>
+          <div style="font-weight:700;color:var(--white);">Lele kabur!</div>
+          <div style="font-size:13px;color:rgba(200,230,255,0.6);">Lele akan menghilang setelah beberapa detik</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <span style="font-size:32px;">🔥</span>
+        <div>
+          <div style="font-weight:700;color:var(--white);">Combo!</div>
+          <div style="font-size:13px;color:rgba(200,230,255,0.6);">Tangkap berturut-turut untuk bonus poin</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <span style="font-size:32px;">❤️</span>
+        <div>
+          <div style="font-weight:700;color:var(--white);">3 nyawa</div>
+          <div style="font-size:13px;color:rgba(200,230,255,0.6);">Lele kabur = kehilangan 1 nyawa. Game over di 0!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button class="btn-main" onclick="showScreen('screen-start')">← Kembali</button>
+</div>
+
+<!-- ===== GAME SCREEN ===== -->
+<div class="screen" id="screen-game">
+  <div class="hud">
+    <div class="hud-item">
+      <div class="hud-label">Skor</div>
+      <div class="hud-val" id="hud-score">0</div>
+    </div>
+    <div class="hud-item">
+      <div class="hud-label">Waktu</div>
+      <div class="hud-val" id="hud-timer">45</div>
+    </div>
+    <div class="hud-item">
+      <div class="hud-label">Nyawa</div>
+      <div class="hud-val" id="hud-lives">❤️❤️❤️</div>
+    </div>
+  </div>
+
+  <div id="game-area">
+    <!-- Water lines -->
+    <div class="water-line" style="top:15%;width:200%;animation-duration:8s;animation-delay:0s;"></div>
+    <div class="water-line" style="top:35%;width:200%;animation-duration:12s;animation-delay:-3s;"></div>
+    <div class="water-line" style="top:55%;width:200%;animation-duration:10s;animation-delay:-1s;"></div>
+    <div class="water-line" style="top:75%;width:200%;animation-duration:9s;animation-delay:-5s;"></div>
+
+    <!-- Seaweed -->
+    <div class="seaweed" style="left:8%;animation-delay:0s;">🌿</div>
+    <div class="seaweed" style="left:25%;animation-delay:0.5s;font-size:28px;">🌿</div>
+    <div class="seaweed" style="left:75%;animation-delay:0.8s;">🌿</div>
+    <div class="seaweed" style="left:90%;animation-delay:0.3s;font-size:28px;">🌿</div>
+
+    <!-- Net cursor -->
+    <div id="net">🪣</div>
+    <!-- Combo display -->
+    <div id="combo-display"></div>
+  </div>
+</div>
+
+<!-- ===== GAME OVER SCREEN ===== -->
+<div class="screen" id="screen-gameover">
+  <div class="go-title">Game Over!</div>
+  <div class="go-emoji" id="go-emoji">😅</div>
+  <div class="go-score" id="go-score">0</div>
+  <div class="go-label">Poin</div>
+  <div class="go-best" id="go-best">🏆 Rekor Baru!</div>
+  <div class="go-stats">
+    <div class="go-stat">
+      <div class="go-stat-val" id="go-caught">0</div>
+      <div class="go-stat-label">🐟 Tertangkap</div>
+    </div>
+    <div class="go-stat">
+      <div class="go-stat-val" id="go-missed">0</div>
+      <div class="go-stat-label">😢 Kabur</div>
+    </div>
+    <div class="go-stat">
+      <div class="go-stat-val" id="go-combo">0</div>
+      <div class="go-stat-label">🔥 Combo Max</div>
+    </div>
+  </div>
+  <button class="btn-main" onclick="startGame()">🎣 Main Lagi!</button>
+  <button class="btn-sec" onclick="showScreen('screen-start')">🏠 Menu</button>
+</div>
+
+<script>
+// ===== GAME STATE =====
+let score = 0, lives = 3, timeLeft = 45;
+let combo = 0, maxCombo = 0;
+let totalCaught = 0, totalMissed = 0;
+let gameActive = false;
+let timerInterval = null;
+let leleArr = [];
+let leleId = 0;
+let highScore = parseInt(localStorage.getItem('lele_hs') || '0');
+let difficulty = 'medium';
+let netX = -100, netY = -100;
+
+const DIFF = {
+  easy:   { spawnRate: 1800, leleLife: 3500, maxLele: 2, baseScore: 10, timeLimit: 60 },
+  medium: { spawnRate: 1200, leleLife: 2500, maxLele: 3, baseScore: 15, timeLimit: 45 },
+  hard:   { spawnRate: 800,  leleLife: 1600, maxLele: 5, baseScore: 20, timeLimit: 35 }
+};
+
+const LELE_TYPES = [
+  { emoji: '🐟', size: 40, points: 1, speed: 'normal' },
+  { emoji: '🐠', size: 36, points: 2, speed: 'fast' },
+  { emoji: '🐡', size: 48, points: 3, speed: 'slow' },
+  { emoji: '🦈', size: 52, points: -1, speed: 'fast', bad: true },
+];
+
+// ===== SCREENS =====
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showHow() { showScreen('screen-how'); }
+
+function setDiff(d, btn) {
+  difficulty = d;
+  document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ===== UPDATE HIGH SCORE DISPLAY =====
+function updateHsBadge() {
+  document.getElementById('hs-badge').textContent = `🏆 Rekor: ${highScore} poin`;
+}
+updateHsBadge();
+
+// ===== NET CURSOR =====
+const gameArea = document.getElementById('game-area');
+const net = document.getElementById('net');
+
+function updateNet(x, y) {
+  netX = x; netY = y;
+  net.style.left = x + 'px';
+  net.style.top = y + 'px';
+}
+
+gameArea.addEventListener('mousemove', e => {
+  const r = gameArea.getBoundingClientRect();
+  updateNet(e.clientX - r.left, e.clientY - r.top);
+});
+gameArea.addEventListener('touchmove', e => {
+  e.preventDefault();
+  const r = gameArea.getBoundingClientRect();
+  const t = e.touches[0];
+  updateNet(t.clientX - r.left, t.clientY - r.top);
+}, { passive: false });
+
+// ===== START GAME =====
+function startGame() {
+  showScreen('screen-game');
+  // Reset state
+  score = 0; lives = 3; combo = 0; maxCombo = 0;
+  totalCaught = 0; totalMissed = 0;
+  gameActive = true;
+  timeLeft = DIFF[difficulty].timeLimit;
+
+  // Clear old leles
+  leleArr.forEach(l => { if(l.el) l.el.remove(); if(l.timer) clearTimeout(l.timer); });
+  leleArr = [];
+
+  updateHUD();
+
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(tickTimer, 1000);
+
+  // Start spawning
+  scheduleSpawn();
+}
+
+function tickTimer() {
+  if(!gameActive) return;
+  timeLeft--;
+  document.getElementById('hud-timer').textContent = timeLeft;
+  if(timeLeft <= 10) document.getElementById('hud-timer').classList.add('timer-warn');
+  else document.getElementById('hud-timer').classList.remove('timer-warn');
+  if(timeLeft <= 0) endGame('time');
+}
+
+// ===== SPAWN LELE =====
+let spawnTimeout = null;
+function scheduleSpawn() {
+  if(!gameActive) return;
+  const d = DIFF[difficulty];
+  if(leleArr.length < d.maxLele) spawnLele();
+  spawnTimeout = setTimeout(scheduleSpawn, d.spawnRate + Math.random()*400 - 200);
+}
+
+function spawnLele() {
+  if(!gameActive) return;
+  const d = DIFF[difficulty];
+
+  // Pick type
+  let type;
+  const r = Math.random();
+  if(r < 0.05) type = LELE_TYPES[3]; // shark (rare bad)
+  else if(r < 0.15) type = LELE_TYPES[2]; // pufferfish
+  else if(r < 0.35) type = LELE_TYPES[1]; // tropical
+  else type = LELE_TYPES[0]; // normal lele
+
+  const el = document.createElement('div');
+  el.className = 'lele';
+  el.textContent = type.emoji;
+  el.style.fontSize = type.size + 'px';
+
+  // Random position (avoid edges)
+  const ga = gameArea.getBoundingClientRect();
+  const maxX = gameArea.offsetWidth - type.size - 20;
+  const maxY = gameArea.offsetHeight - type.size - 40;
+  const x = 20 + Math.random() * maxX;
+  const y = 30 + Math.random() * maxY;
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+
+  // Random swim animation duration
+  const swimDur = (type.speed === 'fast' ? 0.5 : type.speed === 'slow' ? 1.5 : 0.9) + Math.random() * 0.4;
+  el.style.animationDuration = swimDur + 's';
+
+  // Add wobble movement
+  const moveInterval = setInterval(() => {
+    if(!el.parentNode) { clearInterval(moveInterval); return; }
+    const nx = Math.max(10, Math.min(gameArea.offsetWidth - type.size - 10, parseFloat(el.style.left) + (Math.random()-0.5)*60));
+    const ny = Math.max(20, Math.min(gameArea.offsetHeight - type.size - 20, parseFloat(el.style.top) + (Math.random()-0.5)*40));
+    el.style.left = nx + 'px';
+    el.style.top = ny + 'px';
+    // Flip based on direction
+    el.style.transform = nx > parseFloat(el.style.left) ? 'scaleX(1)' : 'scaleX(-1)';
+  }, 600);
+
+  const id = leleId++;
+  const obj = { id, el, type, moveInterval };
+
+  // Click / touch handler
+  function catchIt(e) {
+    if(!gameActive) return;
+    e.stopPropagation();
+    catchLele(obj);
+  }
+  el.addEventListener('click', catchIt);
+  el.addEventListener('touchstart', catchIt, { passive: true });
+
+  // Auto-escape timer
+  const lifeTime = d.leleLife + (Math.random() * 600 - 300);
+  obj.timer = setTimeout(() => {
+    if(!gameActive || !el.parentNode) return;
+    missLele(obj);
+  }, lifeTime);
+
+  gameArea.appendChild(el);
+  leleArr.push(obj);
+}
+
+function removeLele(obj) {
+  clearTimeout(obj.timer);
+  clearInterval(obj.moveInterval);
+  if(obj.el && obj.el.parentNode) obj.el.parentNode.removeChild(obj.el);
+  leleArr = leleArr.filter(l => l.id !== obj.id);
+}
+
+function catchLele(obj) {
+  if(!gameActive) return;
+
+  const rect = obj.el.getBoundingClientRect();
+  const gaRect = gameArea.getBoundingClientRect();
+  const cx = rect.left - gaRect.left + rect.width/2;
+  const cy = rect.top - gaRect.top + rect.height/2;
+
+  obj.el.classList.add('caught');
+  clearInterval(obj.moveInterval);
+  clearTimeout(obj.timer);
+
+  if(obj.type.bad) {
+    // Shark — lose life
+    combo = 0;
+    lives = Math.max(0, lives - 1);
+    showScorePopup(cx, cy, '-1 ❤️', 'miss');
+    showSplash(cx, cy, '💥');
+    updateHUD();
+    if(lives <= 0) { setTimeout(() => endGame('lives'), 300); }
+  } else {
+    combo++;
+    if(combo > maxCombo) maxCombo = combo;
+    totalCaught++;
+
+    const pts = obj.type.points * DIFF[difficulty].baseScore * (combo >= 3 ? combo : 1);
+    score += pts;
+
+    const popTxt = combo >= 3 ? `+${pts} 🔥x${combo}` : `+${pts}`;
+    showScorePopup(cx, cy, popTxt, 'good');
+    showSplash(cx, cy, '💦');
+    showCombo();
+    updateHUD();
+  }
+
+  leleArr = leleArr.filter(l => l.id !== obj.id);
+  setTimeout(() => { if(obj.el.parentNode) obj.el.parentNode.removeChild(obj.el); }, 400);
+}
+
+function missLele(obj) {
+  if(!gameActive) return;
+  const rect = obj.el.getBoundingClientRect();
+  const gaRect = gameArea.getBoundingClientRect();
+  const cx = rect.left - gaRect.left + rect.width/2;
+  const cy = rect.top - gaRect.top + rect.height/2;
+
+  combo = 0;
+  totalMissed++;
+  lives = Math.max(0, lives - 1);
+
+  obj.el.classList.add('missed');
+  clearInterval(obj.moveInterval);
+  showScorePopup(cx, cy, 'Kabur! -❤️', 'miss');
+  updateHUD();
+
+  leleArr = leleArr.filter(l => l.id !== obj.id);
+  setTimeout(() => { if(obj.el.parentNode) obj.el.parentNode.removeChild(obj.el); }, 500);
+
+  if(lives <= 0) setTimeout(() => endGame('lives'), 400);
+}
+
+// ===== EFFECTS =====
+function showSplash(x, y, emoji) {
+  const s = document.createElement('div');
+  s.className = 'splash';
+  s.textContent = emoji;
+  s.style.left = x + 'px';
+  s.style.top = y + 'px';
+  gameArea.appendChild(s);
+  setTimeout(() => s.remove(), 700);
+}
+
+function showScorePopup(x, y, text, cls) {
+  const p = document.createElement('div');
+  p.className = `score-popup ${cls}`;
+  p.textContent = text;
+  p.style.left = x + 'px';
+  p.style.top = y + 'px';
+  gameArea.appendChild(p);
+  setTimeout(() => p.remove(), 900);
+}
+
+function showCombo() {
+  const cd = document.getElementById('combo-display');
+  if(combo >= 3) {
+    cd.textContent = `🔥 COMBO x${combo}!`;
+    cd.style.opacity = '1';
+    clearTimeout(cd._t);
+    cd._t = setTimeout(() => cd.style.opacity = '0', 1500);
+  } else {
+    cd.style.opacity = '0';
+  }
+}
+
+// ===== HUD =====
+function updateHUD() {
+  document.getElementById('hud-score').textContent = score;
+  const livesMap = ['💀','❤️','❤️❤️','❤️❤️❤️'];
+  document.getElementById('hud-lives').textContent = livesMap[Math.max(0,lives)];
+}
+
+// ===== END GAME =====
+function endGame(reason) {
+  if(!gameActive) return;
+  gameActive = false;
+  clearInterval(timerInterval);
+  clearTimeout(spawnTimeout);
+
+  // Clean up leles
+  leleArr.forEach(l => { clearTimeout(l.timer); clearInterval(l.moveInterval); if(l.el && l.el.parentNode) l.el.parentNode.removeChild(l.el); });
+  leleArr = [];
+
+  const isNewRecord = score > highScore;
+  if(isNewRecord) { highScore = score; localStorage.setItem('lele_hs', highScore); updateHsBadge(); }
+
+  // Set game over screen
+  document.getElementById('go-score').textContent = score;
+  document.getElementById('go-caught').textContent = totalCaught;
+  document.getElementById('go-missed').textContent = totalMissed;
+  document.getElementById('go-combo').textContent = maxCombo;
+
+  const bestEl = document.getElementById('go-best');
+  if(isNewRecord) { bestEl.textContent = '🏆 Rekor Baru! Luar biasa!'; bestEl.style.color = '#f1c40f'; }
+  else { bestEl.textContent = `🏆 Rekor: ${highScore} poin`; bestEl.style.color = '#2ecc71'; }
+
+  const emojis = score >= 200 ? '🏆' : score >= 100 ? '😄' : score >= 50 ? '😊' : '😅';
+  document.getElementById('go-emoji').textContent = emojis;
+
+  setTimeout(() => showScreen('screen-gameover'), 500);
+}
+</script>
+</body>
+</html>
