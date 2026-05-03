@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Tangkap Lele!</title>
+<style>
+/* SEMUA OFFLINE - TANPA GOOGLE FONTS */
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+body {
+  font-family: 'Comic Sans MS', 'Chalkboard SE', cursive;
+  background: #0a3d6b;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  overflow: hidden;
+  touch-action: none;
+}
+
+/* BG GRADIENT */
+.bg {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(180deg, #1a5276 0%, #0a3d6b 50%, #07294a 100%);
+  z-index: 0;
+}
+
+/* BUBBLES */
+.bubble {
+  position: fixed;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.07);
+  pointer-events: none;
+  z-index: 1;
+  animation: bubbleRise linear infinite;
+}
+@keyframes bubbleRise {
+  0%   { transform: translateY(105vh); opacity: 0.5; }
+  100% { transform: translateY(-80px); opacity: 0; }
+}
+
+/* SCREENS */
+.screen {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 420px;
+  padding: 16px;
+  position: relative;
+  z-index: 10;
+  min-height: 100vh;
+  justify-content: center;
+}
+.screen.active { display: flex; }
+
+/* ===== START SCREEN ===== */
+.title {
+  font-size: 48px;
+  font-weight: 900;
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 4px 16px rgba(0,150,255,0.7), 0 2px 0 rgba(0,0,0,0.4);
+  line-height: 1.1;
+  margin-bottom: 6px;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.04)} }
+
+.title-sub {
+  color: rgba(180,220,255,0.75);
+  font-size: 14px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.lele-big {
+  font-size: 90px;
+  margin: 8px 0 20px;
+  display: block;
+  text-align: center;
+  animation: swimBig 2.5s ease-in-out infinite;
+  filter: drop-shadow(0 6px 18px rgba(0,150,255,0.5));
+}
+@keyframes swimBig {
+  0%,100% { transform: rotate(-10deg) translateY(0); }
+  50%      { transform: rotate(10deg) translateY(-10px); }
+}
+
+/* HIGH SCORE BADGE */
+.hs-badge {
+  background: rgba(241,196,15,0.15);
+  border: 2px solid rgba(241,196,15,0.4);
+  border-radius: 20px;
+  padding: 7px 20px;
+  color: #f1c40f;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+/* DIFFICULTY */
+.diff-title {
+  color: rgba(180,220,255,0.7);
+  font-size: 13px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.diff-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 22px;
+  width: 100%;
+  max-width: 320px;
+}
+.diff-btn {
+  flex: 1;
+  padding: 12px 4px;
+  border-radius: 14px;
+  border: 2px solid transparent;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  -webkit-appearance: none;
+}
+.diff-btn.easy   { background: rgba(46,204,113,0.12); color: #2ecc71; border-color: rgba(46,204,113,0.3); }
+.diff-btn.medium { background: rgba(241,196,15,0.12); color: #f1c40f; border-color: rgba(241,196,15,0.3); }
+.diff-btn.hard   { background: rgba(231,76,60,0.12);  color: #e74c3c; border-color: rgba(231,76,60,0.3); }
+.diff-btn.easy.sel   { background: rgba(46,204,113,0.3); border-color: #2ecc71; transform:scale(1.06); }
+.diff-btn.medium.sel { background: rgba(241,196,15,0.3); border-color: #f1c40f; transform:scale(1.06); }
+.diff-btn.hard.sel   { background: rgba(231,76,60,0.3);  border-color: #e74c3c; transform:scale(1.06); }
+
+/* BUTTONS */
+.btn-play {
+  background: linear-gradient(135deg, #f1c40f, #e67e22);
+  color: #1a0a00;
+  border: none;
+  border-radius: 50px;
+  padding: 16px 0;
+  width: 100%;
+  max-width: 280px;
+  font-family: inherit;
+  font-size: 20px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(241,196,15,0.4), 0 3px 0 rgba(0,0,0,0.25);
+  margin-bottom: 10px;
+  -webkit-appearance: none;
+  transition: transform 0.1s;
+}
+.btn-play:active { transform: scale(0.96); }
+
+.btn-how {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 50px;
+  padding: 12px 0;
+  width: 100%;
+  max-width: 280px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-appearance: none;
+}
+
+/* ===== HOW TO SCREEN ===== */
+.how-title {
+  font-size: 28px;
+  font-weight: 900;
+  color: #fff;
+  text-align: center;
+  margin-bottom: 20px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.how-box {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 18px;
+  padding: 20px;
+  width: 100%;
+  max-width: 320px;
+  margin-bottom: 20px;
+}
+.how-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.how-item:last-child { margin-bottom: 0; }
+.how-icon { font-size: 30px; flex-shrink: 0; }
+.how-text-title { font-size: 15px; font-weight: 700; color: #fff; }
+.how-text-desc  { font-size: 12px; color: rgba(180,220,255,0.65); margin-top: 2px; }
+
+/* ===== GAME SCREEN ===== */
+/* HUD */
+.hud {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 420px;
+  padding: 10px 16px;
+  background: rgba(0,0,0,0.4);
+  border-radius: 14px;
+  margin-bottom: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.hud-item { text-align: center; }
+.hud-lbl { font-size: 10px; color: rgba(180,220,255,0.5); text-transform: uppercase; letter-spacing: 1px; }
+.hud-val { font-size: 24px; font-weight: 900; color: #fff; line-height: 1.1; }
+.hud-val.warn { color: #e74c3c; animation: blink 0.5s infinite; }
+@keyframes blink { 50%{opacity:0.3} }
+
+/* GAME AREA */
+#game-area {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  height: 460px;
+  background: linear-gradient(180deg, #1565a8 0%, #0d4f8f 60%, #0a3d6b 100%);
+  border-radius: 18px;
+  overflow: hidden;
+  border: 2px solid rgba(100,180,255,0.25);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5), inset 0 0 50px rgba(0,80,160,0.3);
+  cursor: none;
+  touch-action: none;
+}
+
+/* WATER SHIMMER TOP */
+#game-area::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 50px;
+  background: linear-gradient(180deg, rgba(120,210,255,0.12), transparent);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* WATER LINES */
+.wline {
+  position: absolute;
+  height: 1px;
+  background: rgba(120,200,255,0.1);
+  pointer-events: none;
+  animation: wflow linear infinite;
+}
+@keyframes wflow {
+  0%   { transform: translateX(-110%); }
+  100% { transform: translateX(210%); }
+}
+
+/* SEAWEED */
+.sweed {
+  position: absolute;
+  bottom: -4px;
+  font-size: 32px;
+  pointer-events: none;
+  opacity: 0.65;
+  animation: sway ease-in-out infinite;
+  transform-origin: bottom center;
+  z-index: 1;
+}
+@keyframes sway { 0%,100%{transform:rotate(-14deg)} 50%{transform:rotate(14deg)} }
+
+/* FISH / LELE */
+.lele {
+  position: absolute;
+  font-size: 44px;
+  line-height: 1;
+  z-index: 5;
+  cursor: pointer;
+  transition: left 0.6s ease, top 0.6s ease;
+  filter: drop-shadow(0 3px 8px rgba(0,0,0,0.4));
+  /* NO CSS animation that conflicts with touch */
+  -webkit-user-select: none;
+  user-select: none;
+}
+.lele.bad { font-size: 48px; }
+
+/* Caught animation */
+.lele.caught {
+  animation: caughtAnim 0.35s forwards !important;
+  transition: none !important;
+  pointer-events: none;
+}
+@keyframes caughtAnim {
+  0%   { transform: scale(1) rotate(0deg); opacity: 1; }
+  50%  { transform: scale(1.8) rotate(25deg); opacity: 1; }
+  100% { transform: scale(0) rotate(60deg); opacity: 0; }
+}
+
+/* Escape animation */
+.lele.escaped {
+  animation: escapedAnim 0.4s forwards !important;
+  transition: none !important;
+  pointer-events: none;
+}
+@keyframes escapedAnim {
+  100% { transform: translateY(80px) scale(0.3); opacity: 0; }
+}
+
+/* NET CURSOR */
+#net {
+  position: absolute;
+  font-size: 40px;
+  pointer-events: none;
+  z-index: 10;
+  transform: translate(-50%, -50%);
+  display: none;
+}
+
+/* COMBO DISPLAY */
+#combo-txt {
+  position: absolute;
+  top: 10px; right: 10px;
+  font-size: 16px;
+  font-weight: 900;
+  color: #f1c40f;
+  z-index: 6;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+/* SCORE POPUP */
+.spop {
+  position: absolute;
+  font-size: 22px;
+  font-weight: 900;
+  pointer-events: none;
+  z-index: 9;
+  transform: translate(-50%, -50%);
+  animation: spopAnim 0.8s forwards;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+  white-space: nowrap;
+}
+.spop.good { color: #2ecc71; }
+.spop.bad  { color: #e74c3c; }
+@keyframes spopAnim {
+  0%   { transform: translate(-50%,-50%) scale(0.5); opacity: 1; }
+  60%  { transform: translate(-50%,-130%) scale(1.1); opacity: 1; }
+  100% { transform: translate(-50%,-170%) scale(1); opacity: 0; }
+}
+
+/* SPLASH */
+.splash {
+  position: absolute;
+  font-size: 22px;
+  pointer-events: none;
+  z-index: 8;
+  transform: translate(-50%, -50%);
+  animation: splashAnim 0.55s forwards;
+}
+@keyframes splashAnim {
+  0%   { transform: translate(-50%,-50%) scale(0.4); opacity: 1; }
+  100% { transform: translate(-50%,-110%) scale(1.4); opacity: 0; }
+}
+
+/* ===== GAME OVER SCREEN ===== */
+.go-title { font-size: 36px; font-weight: 900; color: #fff; text-align: center; margin-bottom: 4px; text-shadow: 0 3px 12px rgba(0,0,0,0.4); }
+.go-emoji { font-size: 60px; margin: 12px 0; text-align: center; display: block; }
+.go-pts   { font-size: 60px; font-weight: 900; color: #f1c40f; text-shadow: 0 4px 16px rgba(241,196,15,0.5); text-align: center; }
+.go-ptslbl { color: rgba(180,220,255,0.6); font-size: 13px; text-align: center; margin-bottom: 6px; }
+.go-new   { background: rgba(241,196,15,0.12); border: 1px solid rgba(241,196,15,0.35); border-radius: 20px; padding: 6px 18px; color: #f1c40f; font-size: 13px; font-weight: 700; margin-bottom: 20px; }
+.go-stats {
+  display: flex; gap: 10px; width: 100%; max-width: 300px; margin-bottom: 24px;
+}
+.go-stat {
+  flex: 1;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 10px 6px;
+  text-align: center;
+}
+.go-sv { font-size: 22px; font-weight: 900; color: #fff; }
+.go-sl { font-size: 10px; color: rgba(180,220,255,0.5); margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+
+<!-- BUBBLES (generated by JS, inline so no external deps) -->
+
+<!-- ===== SCREEN: START ===== -->
+<div class="screen active" id="sc-start">
+  <div class="title">🎣 Tangkap<br>Lele!</div>
+  <div class="title-sub">Tap lele secepat mungkin sebelum kabur!</div>
+  <span class="lele-big">🐟</span>
+  <div class="hs-badge" id="hs-badge">🏆 Rekor: 0 poin</div>
+  <div class="diff-title">Pilih Kesulitan</div>
+  <div class="diff-row">
+    <button class="diff-btn easy"   onclick="setDiff('easy',this)">😊 Mudah</button>
+    <button class="diff-btn medium sel" onclick="setDiff('medium',this)">😤 Sedang</button>
+    <button class="diff-btn hard"   onclick="setDiff('hard',this)">😈 Susah</button>
+  </div>
+  <button class="btn-play" onclick="startGame()">🎣 MULAI MAIN!</button>
+  <button class="btn-how"  onclick="showSc('sc-how')">❓ Cara Main</button>
+</div>
+
+<!-- ===== SCREEN: HOW TO ===== -->
+<div class="screen" id="sc-how">
+  <div class="how-title">Cara Main</div>
+  <div class="how-box">
+    <div class="how-item">
+      <span class="how-icon">🐟</span>
+      <div>
+        <div class="how-text-title">Tap lele!</div>
+        <div class="how-text-desc">Klik/tap lele yang muncul di kolam sebelum kabur</div>
+      </div>
+    </div>
+    <div class="how-item">
+      <span class="how-icon">🦈</span>
+      <div>
+        <div class="how-text-title">Hindari hiu!</div>
+        <div class="how-text-desc">Kena hiu = hilang nyawa ekstra</div>
+      </div>
+    </div>
+    <div class="how-item">
+      <span class="how-icon">🔥</span>
+      <div>
+        <div class="how-text-title">Combo!</div>
+        <div class="how-text-desc">Tangkap berturut-turut = poin berlipat</div>
+      </div>
+    </div>
+    <div class="how-item">
+      <span class="how-icon">❤️</span>
+      <div>
+        <div class="how-text-title">3 nyawa</div>
+        <div class="how-text-desc">Lele kabur atau kena hiu = -1 nyawa</div>
+      </div>
+    </div>
+  </div>
+  <button class="btn-play" onclick="showSc('sc-start')">← Kembali</button>
+</div>
+
+<!-- ===== SCREEN: GAME ===== -->
+<div class="screen" id="sc-game" style="justify-content:flex-start;padding-top:12px;">
+  <div class="hud">
+    <div class="hud-item">
+      <div class="hud-lbl">Skor</div>
+      <div class="hud-val" id="h-score">0</div>
+    </div>
+    <div class="hud-item">
+      <div class="hud-lbl">Waktu</div>
+      <div class="hud-val" id="h-timer">45</div>
+    </div>
+    <div class="hud-item">
+      <div class="hud-lbl">Nyawa</div>
+      <div class="hud-val" id="h-lives">❤️❤️❤️</div>
+    </div>
+  </div>
+
+  <div id="game-area">
+    <!-- Water lines -->
+    <div class="wline" style="top:18%;width:300%;animation-duration:9s;"></div>
+    <div class="wline" style="top:40%;width:300%;animation-duration:13s;animation-delay:-4s;"></div>
+    <div class="wline" style="top:62%;width:300%;animation-duration:11s;animation-delay:-2s;"></div>
+    <div class="wline" style="top:82%;width:300%;animation-duration:8s;animation-delay:-6s;"></div>
+    <!-- Seaweed -->
+    <div class="sweed" style="left:5%;animation-duration:2.2s;">🌿</div>
+    <div class="sweed" style="left:22%;font-size:24px;animation-duration:2.8s;animation-delay:0.4s;">🌿</div>
+    <div class="sweed" style="left:70%;animation-duration:2.5s;animation-delay:0.8s;">🌿</div>
+    <div class="sweed" style="left:88%;font-size:24px;animation-duration:2s;animation-delay:0.2s;">🌿</div>
+    <!-- Net cursor -->
+    <div id="net">🪣</div>
+    <!-- Combo text -->
+    <div id="combo-txt"></div>
+  </div>
+</div>
+
+<!-- ===== SCREEN: GAME OVER ===== -->
+<div class="screen" id="sc-over">
+  <div class="go-title">Game Over!</div>
+  <span class="go-emoji" id="go-emoji">😅</span>
+  <div class="go-pts" id="go-pts">0</div>
+  <div class="go-ptslbl">Poin</div>
+  <div class="go-new" id="go-new">🏆 Rekor Baru!</div>
+  <div class="go-stats">
+    <div class="go-stat"><div class="go-sv" id="go-caught">0</div><div class="go-sl">🐟 Tangkap</div></div>
+    <div class="go-stat"><div class="go-sv" id="go-missed">0</div><div class="go-sl">😢 Kabur</div></div>
+    <div class="go-stat"><div class="go-sv" id="go-combo">0</div><div class="go-sl">🔥 Max Combo</div></div>
+  </div>
+  <button class="btn-play" onclick="startGame()">🎣 Main Lagi!</button>
+  <button class="btn-how" style="margin-top:10px;" onclick="showSc('sc-start')">🏠 Menu</button>
+</div>
+
+<script>
+// ===== BUBBLES =====
+(function(){
+  for(var i=0;i<10;i++){
+    var b=document.createElement('div');
+    b.className='bubble';
+    var s=Math.random()*35+8;
+    b.style.cssText='width:'+s+'px;height:'+s+'px;left:'+(Math.random()*100)+'vw;bottom:-'+s+'px;animation-duration:'+(Math.random()*7+5)+'s;animation-delay:'+(Math.random()*7)+'s;';
+    document.body.appendChild(b);
+  }
+})();
+
+// ===== STATE =====
+var score=0, lives=3, timeLeft=45, combo=0, maxCombo=0;
+var totalCaught=0, totalMissed=0;
+var gameActive=false;
+var timerInt=null, spawnTO=null;
+var fishes=[];
+var fishId=0;
+var diff='medium';
+var highScore=0;
+
+try { highScore=parseInt(localStorage.getItem('lele_hs2')||'0')||0; } catch(e){}
+
+var DIFF={
+  easy:   {rate:2000, life:3800, max:2, pts:10, time:60},
+  medium: {rate:1300, life:2600, max:3, pts:15, time:45},
+  hard:   {rate:850,  life:1500, max:5, pts:20, time:35}
+};
+
+var TYPES=[
+  {e:'🐟', sz:44, pts:1, bad:false, label:'Lele'},
+  {e:'🐠', sz:38, pts:2, bad:false, label:'Tropis'},
+  {e:'🐡', sz:50, pts:3, bad:false, label:'Buntal'},
+  {e:'🦈', sz:52, pts:-2,bad:true,  label:'Hiu'}
+];
+
+// ===== SCREENS =====
+function showSc(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById(id).classList.add('active');
+}
+
+function setDiff(d, btn){
+  diff=d;
+  document.querySelectorAll('.diff-btn').forEach(function(b){b.classList.remove('sel');});
+  btn.classList.add('sel');
+}
+
+function updateHsBadge(){
+  document.getElementById('hs-badge').textContent='🏆 Rekor: '+highScore+' poin';
+}
+updateHsBadge();
+
+// ===== NET CURSOR (desktop) =====
+var ga=document.getElementById('game-area');
+var netEl=document.getElementById('net');
+
+ga.addEventListener('mousemove',function(e){
+  var r=ga.getBoundingClientRect();
+  var x=e.clientX-r.left, y=e.clientY-r.top;
+  netEl.style.display='block';
+  netEl.style.left=x+'px';
+  netEl.style.top=y+'px';
+});
+ga.addEventListener('mouseleave',function(){ netEl.style.display='none'; });
+
+// ===== START GAME =====
+function startGame(){
+  showSc('sc-game');
+  score=0; lives=3; combo=0; maxCombo=0;
+  totalCaught=0; totalMissed=0; gameActive=true;
+  timeLeft=DIFF[diff].time;
+
+  // Clear old fish
+  fishes.forEach(function(f){
+    clearTimeout(f.to);
+    clearTimeout(f.moveTo);
+    if(f.el && f.el.parentNode) f.el.parentNode.removeChild(f.el);
+  });
+  fishes=[];
+
+  clearInterval(timerInt);
+  clearTimeout(spawnTO);
+
+  document.getElementById('h-timer').classList.remove('warn');
+  updateHUD();
+
+  timerInt=setInterval(tick,1000);
+  scheduleSpawn();
+}
+
+function tick(){
+  if(!gameActive) return;
+  timeLeft--;
+  var tv=document.getElementById('h-timer');
+  tv.textContent=timeLeft;
+  if(timeLeft<=10) tv.classList.add('warn');
+  if(timeLeft<=0) endGame('time');
+}
+
+// ===== SPAWN =====
+function scheduleSpawn(){
+  if(!gameActive) return;
+  var d=DIFF[diff];
+  if(fishes.length<d.max) spawnFish();
+  var jitter=(Math.random()*400)-200;
+  spawnTO=setTimeout(scheduleSpawn, d.rate+jitter);
+}
+
+function spawnFish(){
+  if(!gameActive) return;
+  var d=DIFF[diff];
+
+  // Pick type
+  var r=Math.random();
+  var type;
+  if(r<0.06)       type=TYPES[3]; // hiu rare
+  else if(r<0.16)  type=TYPES[2]; // buntal
+  else if(r<0.35)  type=TYPES[1]; // tropis
+  else             type=TYPES[0]; // lele
+
+  var el=document.createElement('div');
+  el.className='lele'+(type.bad?' bad':'');
+  el.textContent=type.e;
+  el.style.fontSize=type.sz+'px';
+
+  var W=ga.offsetWidth  || 360;
+  var H=ga.offsetHeight || 460;
+  var pad=type.sz+10;
+  var x=pad+Math.random()*(W-pad*2);
+  var y=pad+Math.random()*(H-pad*2-30);
+  el.style.left=x+'px';
+  el.style.top=y+'px';
+
+  var id=fishId++;
+  var obj={id:id, el:el, type:type, to:null, moveTo:null, alive:true};
+
+  // TAP / CLICK handler — use both for Android WebViewer
+  function onTap(e){
+    e.preventDefault();
+    e.stopPropagation();
+    if(!obj.alive || !gameActive) return;
+    obj.alive=false;
+    tapFish(obj);
+  }
+  el.addEventListener('touchstart', onTap, {passive:false});
+  el.addEventListener('click', onTap);
+
+  // Movement
+  function moveFish(){
+    if(!obj.alive) return;
+    var nx=pad+Math.random()*(W-pad*2);
+    var ny=pad+Math.random()*(H-pad*2-30);
+    el.style.left=nx+'px';
+    el.style.top=ny+'px';
+    // flip
+    if(nx > parseFloat(el.style.left)) el.style.transform='scaleX(-1)';
+    else el.style.transform='scaleX(1)';
+    var speed=(type===TYPES[1])?400:(type===TYPES[3])?350:700;
+    obj.moveTo=setTimeout(moveFish, speed+Math.random()*400);
+  }
+  obj.moveTo=setTimeout(moveFish, 600+Math.random()*400);
+
+  // Escape timer
+  var life=d.life+(Math.random()*500-250);
+  obj.to=setTimeout(function(){
+    if(!obj.alive || !gameActive) return;
+    obj.alive=false;
+    escapeFish(obj);
+  }, life);
+
+  ga.appendChild(el);
+  fishes.push(obj);
+}
+
+function removeFish(obj){
+  clearTimeout(obj.to);
+  clearTimeout(obj.moveTo);
+  fishes=fishes.filter(function(f){return f.id!==obj.id;});
+}
+
+// ===== CATCH =====
+function tapFish(obj){
+  removeFish(obj);
+  var rect=obj.el.getBoundingClientRect();
+  var gar=ga.getBoundingClientRect();
+  var cx=rect.left-gar.left+rect.width/2;
+  var cy=rect.top-gar.top+rect.height/2;
+
+  obj.el.classList.add('caught');
+
+  if(obj.type.bad){
+    // Hit shark
+    combo=0;
+    lives=Math.max(0,lives-1);
+    showPop(cx,cy,'💥 -❤️','bad');
+    showSplash(cx,cy,'💥');
+    updateHUD();
+    if(lives<=0){ setTimeout(function(){endGame('lives');},350); }
+  } else {
+    combo++;
+    if(combo>maxCombo) maxCombo=combo;
+    totalCaught++;
+    var mult=(combo>=3)?combo:1;
+    var pts=obj.type.pts*DIFF[diff].pts*mult;
+    score+=pts;
+    var ptxt=combo>=3?'+'+pts+' 🔥x'+combo:'+'+pts;
+    showPop(cx,cy,ptxt,'good');
+    showSplash(cx,cy,'💦');
+    showCombo();
+    updateHUD();
+  }
+
+  setTimeout(function(){
+    if(obj.el && obj.el.parentNode) obj.el.parentNode.removeChild(obj.el);
+  },380);
+}
+
+// ===== ESCAPE =====
+function escapeFish(obj){
+  removeFish(obj);
+  var rect=obj.el.getBoundingClientRect();
+  var gar=ga.getBoundingClientRect();
+  var cx=rect.left-gar.left+rect.width/2;
+  var cy=rect.top-gar.top+rect.height/2;
+
+  if(!obj.type.bad){
+    // Only lose life if it's not a shark escaping
+    combo=0;
+    totalMissed++;
+    lives=Math.max(0,lives-1);
+    showPop(cx,cy,'Kabur! 😢','bad');
+    updateHUD();
+    if(lives<=0){ setTimeout(function(){endGame('lives');},400); }
+  }
+
+  obj.el.classList.add('escaped');
+  setTimeout(function(){
+    if(obj.el && obj.el.parentNode) obj.el.parentNode.removeChild(obj.el);
+  },450);
+}
+
+// ===== EFFECTS =====
+function showPop(x,y,txt,cls){
+  var p=document.createElement('div');
+  p.className='spop '+cls;
+  p.textContent=txt;
+  p.style.left=x+'px';
+  p.style.top=y+'px';
+  ga.appendChild(p);
+  setTimeout(function(){if(p.parentNode)p.parentNode.removeChild(p);},900);
+}
+
+function showSplash(x,y,e){
+  var s=document.createElement('div');
+  s.className='splash';
+  s.textContent=e;
+  s.style.left=x+'px';
+  s.style.top=y+'px';
+  ga.appendChild(s);
+  setTimeout(function(){if(s.parentNode)s.parentNode.removeChild(s);},600);
+}
+
+var comboHideTO=null;
+function showCombo(){
+  var ct=document.getElementById('combo-txt');
+  if(combo>=3){
+    ct.textContent='🔥 COMBO x'+combo+'!';
+    ct.style.opacity='1';
+    clearTimeout(comboHideTO);
+    comboHideTO=setTimeout(function(){ct.style.opacity='0';},1600);
+  } else {
+    ct.style.opacity='0';
+  }
+}
+
+// ===== HUD =====
+function updateHUD(){
+  document.getElementById('h-score').textContent=score;
+  var lmap=['💀','❤️','❤️❤️','❤️❤️❤️'];
+  document.getElementById('h-lives').textContent=lmap[Math.max(0,Math.min(3,lives))];
+}
+
+// ===== END GAME =====
+function endGame(reason){
+  if(!gameActive) return;
+  gameActive=false;
+  clearInterval(timerInt);
+  clearTimeout(spawnTO);
+
+  fishes.forEach(function(f){
+    clearTimeout(f.to);
+    clearTimeout(f.moveTo);
+    if(f.el && f.el.parentNode) f.el.parentNode.removeChild(f.el);
+  });
+  fishes=[];
+
+  var isNew=score>highScore;
+  if(isNew){
+    highScore=score;
+    try{localStorage.setItem('lele_hs2',highScore);}catch(e){}
+    updateHsBadge();
+  }
+
+  document.getElementById('go-pts').textContent=score;
+  document.getElementById('go-caught').textContent=totalCaught;
+  document.getElementById('go-missed').textContent=totalMissed;
+  document.getElementById('go-combo').textContent=maxCombo;
+
+  var nb=document.getElementById('go-new');
+  if(isNew){ nb.textContent='🏆 Rekor Baru! Luar biasa!'; nb.style.color='#f1c40f'; }
+  else { nb.textContent='🏆 Rekor: '+highScore+' poin'; nb.style.color='#2ecc71'; }
+
+  var em=score>=200?'🏆':score>=100?'😄':score>=50?'😊':'😅';
+  document.getElementById('go-emoji').textContent=em;
+
+  setTimeout(function(){showSc('sc-over');},400);
+}
+</script>
+</body>
+</html>
